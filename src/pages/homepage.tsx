@@ -665,6 +665,12 @@ const InstagramCodeClone: React.FC = () => {
                 <IconText>To Do List</IconText>
               </Link>
             </SidebarLink>
+            <SidebarLink>
+              <FontAwesomeIcon icon={faUsers} />
+              <Link to="/calendar">
+                <IconText>Calendar</IconText>
+              </Link>
+            </SidebarLink>
           </SidebarContent>
         </Sidebar>
 

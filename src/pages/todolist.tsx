@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
+import NavBar from "../components/MainNavbar";
 
 interface TaskTextProps {
   completed: boolean;
@@ -36,13 +37,11 @@ const popUp = keyframes`
 
 const AppWrapper = styled.div`
   width: 100vw;
-  height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   background-color: black;
-  color: #e1306c; /* Change text color */
+  color: #e1306c;
 `;
 
 const TodoItemWrapper = styled.li<TaskTextProps>`
@@ -106,13 +105,13 @@ const ConfirmMessage = styled.p`
 
 const Timer = styled.span`
   font-size: 18px;
-  color: #e1306c; /* Change timer color */
+  color: #e1306c;
 `;
 
 const ConfirmButton = styled.button`
   margin: 0 10px;
   padding: 8px 16px;
-  background-color: #e1306c; /* Change button color */
+  background-color: #e1306c;
   color: white;
   border: none;
   border-radius: 5px;
@@ -162,7 +161,7 @@ const CompletedText = styled.p`
   margin-top: 10px;
 `;
 
-const ToDo: React.FC = () => {
+const ToDoList: React.FC = () => {
   const [todoList, setTodoList] = useState<
     { task: string; completed: boolean }[]
   >([]);
@@ -240,15 +239,20 @@ const ToDo: React.FC = () => {
         value={newTask}
         onChange={(e) => setNewTask(e.target.value)}
         placeholder="Enter a task..."
-        style={{ fontSize: "18px", marginBottom: "20px", width: "80%" }}
+        style={{
+          fontSize: "18px",
+          marginBottom: "20px",
+          width: "40%",
+          marginLeft: "-1%",
+        }}
       />
       <button
         onClick={handleAddTask}
-        style={{ fontSize: "18px", marginBottom: "20px" }}
+        style={{ fontSize: "18px", marginBottom: "20px", marginLeft: "-1%" }}
       >
         Add Task
       </button>
-      <ul style={{ width: "80%", padding: 0 }}>
+      <ul style={{ width: "60%", padding: 0, marginLeft: "8%" }}>
         {todoList.map((item, index) => (
           <TodoItemWrapper key={index} completed={item.completed}>
             {editingIndex === index ? (
@@ -314,4 +318,11 @@ const ToDo: React.FC = () => {
   );
 };
 
-export default ToDo;
+export function ToDo() {
+  return (
+    <>
+      <NavBar />
+      <ToDoList />
+    </>
+  );
+}

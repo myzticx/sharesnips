@@ -3,8 +3,9 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 import Homepage from "./pages/homepage";
 import Friends from "./pages/friends";
-import ToDo from "./pages/todolist";
+import { ToDo } from "./pages/todolist";
 import App from "./App";
+import Calendar from "./pages/calendar";
 import reportWebVitals from "./reportWebVitals";
 import { createBrowserRouter, RouterProvider, Link } from "react-router-dom";
 
@@ -24,6 +25,10 @@ const router = createBrowserRouter([
   {
     path: "/todolist",
     element: <ToDo />,
+  },
+  {
+    path: "/calendar",
+    element: <Calendar />,
   },
 ]);
 

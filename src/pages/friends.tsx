@@ -13,6 +13,10 @@ const MainText = styled.h1`
   text-align: center;
   font-size: 2em;
   font-weight: 400;
+
+  @media (max-height: 1827px) {
+    font-size: 1.8rem;
+  }
 `;
 
 const friends = () => {

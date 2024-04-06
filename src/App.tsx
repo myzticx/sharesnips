@@ -4,7 +4,8 @@ import Friends from "./pages/friends";
 import { Routes, Route } from "react-router-dom";
 import NotSignedInPage from "./pages/notsignedin";
 import MyAccount from "./pages/myaccount";
-import ToDo from "./pages/todolist";
+import { ToDo } from "./pages/todolist";
+import Calendar from "./pages/calendar";
 import { BreakpointProvider, Breakpoint } from "react-socks";
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
           <Route path="/homepage" element={<HomePage />} />
           <Route path="/todolist" element={<ToDo />} />
           <Route path="/notsignedin" element={<NotSignedInPage />} />
+          <Route path="/calendar" element={<Calendar />} />
           <Route
             path="/MyAccount"
             element={<MyAccount username={""} email={""} />}
