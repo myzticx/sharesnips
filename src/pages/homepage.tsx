@@ -1,10 +1,12 @@
 import React, { useState } from "react";
+import { Resizable } from "react-resizable";
 import styled, { createGlobalStyle, ThemeProvider } from "styled-components";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faHeart as farHeart,
   faStar as farStar,
 } from "@fortawesome/free-regular-svg-icons";
+import { v4 as uuidv4 } from "uuid";
 import {
   faHeart,
   faStar,
@@ -20,7 +22,8 @@ import {
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import logo from "../images/logo.png";
-import friends from "./friends";
+import MobileNavbar from "../components/MobileNavbar";
+import { toast, Toaster } from "react-hot-toast";
 
 // Interface for code snippet
 interface CodeSnippet {
@@ -170,10 +173,7 @@ const Hamburger = styled.div`
   color: ${(props) => props.theme.accent};
 
   @media (max-width: 768px) {
-    display: block; /* Display the hamburger on screens <= 768px */
-    position: absolute;
-    top: 20px;
-    left: 0px;
+    display: none;
   }
 `;
 
@@ -188,9 +188,7 @@ const Sidebar = styled.div<{ isOpen: boolean }>`
   transition: all 0.3s ease;
 
   @media (max-width: 768px) {
-    width: 100%;
-    display: ${(props) =>
-      props.isOpen ? "block" : "none"}; /* Show or hide on mobile */
+    display: none;
   }
 `;
 
@@ -287,7 +285,6 @@ const Logo = styled.div`
 
   @media (max-width: 768px) {
     font-size: 20px;
-    margin-left: 85px;
   }
 `;
 
@@ -567,6 +564,14 @@ const SecondSidebarLink = styled.div`
   }
 `;
 
+const ShareSnipsBox = styled.div`
+  background-color: #333; /* Dark grey background color */
+  color: white; /* Text color */
+  border-radius: 10px; /* Curved edges */
+  padding: 20px; /* Padding inside the box */
+  margin-bottom: 20px; /* Margin to separate from other elements */
+`;
+
 const LogoInLeftBar = styled.img`
   position: absolute;
   top: 20px; // Adjust the top position as needed
@@ -587,19 +592,33 @@ const InstagramCodeClone: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [notifications, setNotifications] = useState<string[]>([]);
 
+  const checkCodeCharacteristics = (snippet: string) => {
+    // Simple check for code characteristics
+    const codeRegex = /[{}()<>;:,=]/;
+    return codeRegex.test(snippet);
+  };
+
   const handlePostSnippet = () => {
     if (snippetInput.trim() !== "") {
-      const newSnippet: CodeSnippet = {
-        id: Date.now(),
-        code: snippetInput.trim(),
-        language: "Any",
-        likes: 0,
-        liked: false,
-        favorited: false,
-        comments: { count: 0, list: [] }, // Initialize comments.list as an empty array
-      };
-      setPostedSnippets([newSnippet, ...postedSnippets]);
-      setSnippetInput("");
+      // Check if the snippet contains code characteristics
+      if (checkCodeCharacteristics(snippetInput)) {
+        const newSnippet: CodeSnippet = {
+          id: uuidv4(),
+          code: snippetInput.trim(),
+          language: "Any",
+          likes: 0,
+          liked: false,
+          favorited: false,
+          comments: { count: 0, list: [] }, // Initialize comments.list as an empty array
+        };
+        setPostedSnippets([newSnippet, ...postedSnippets]);
+        setSnippetInput("");
+        toast.success("Snippet posted successfully!");
+      } else {
+        // Display error toast if snippet doesn't contain code characteristics
+
+        toast.error("Sorry, but that isn't a code snippet.");
+      }
     }
   };
 
@@ -607,12 +626,23 @@ const InstagramCodeClone: React.FC = () => {
     setCurrentTheme(currentTheme === lightTheme ? darkTheme : lightTheme);
   };
 
+  const [username, setUsername] = useState("");
+
   const toggleNotifications = () => {
     setHasNotifications(!hasNotifications);
   };
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  const [width, setWidth] = React.useState(400);
+
+  const handleResize = (
+    _: any,
+    { size }: { size: { width: number; height: number } }
+  ) => {
+    setWidth(size.width);
   };
 
   const initialSnippets: CodeSnippet[] = [
@@ -671,22 +701,43 @@ const InstagramCodeClone: React.FC = () => {
                 <IconText>Calendar</IconText>
               </Link>
             </SidebarLink>
+            <SidebarLink>
+              <FontAwesomeIcon icon={faStar} />
+              <Link to="/calendar">
+                <IconText>Favourites</IconText>
+              </Link>
+            </SidebarLink>
           </SidebarContent>
         </Sidebar>
 
         <SecondSidebar>
-          <SecondSidebarContent>
-            <SecondSidebarLink>
-              <FontAwesomeIcon icon={faUsers} />
-              <IconText>Feed</IconText>
-            </SecondSidebarLink>
-
-            {/* Display notifications within the second sidebar */}
-            {notifications.map((notification, index) => (
-              <div key={index}>{notification}</div>
-            ))}
-          </SecondSidebarContent>
+          <Resizable
+            width={width}
+            height={Infinity}
+            minConstraints={[200, Infinity]} // Minimum width
+            maxConstraints={[600, Infinity]} // Maximum width
+            onResize={handleResize}
+          >
+            <SecondSidebarContent style={{ width: `${width}px` }}>
+              <SecondSidebarLink>
+                <FontAwesomeIcon icon={faUsers} />
+                <IconText>Feed</IconText>
+              </SecondSidebarLink>
+              <ShareSnipsBox>
+                <h3>ShareSnips</h3>
+                <p>
+                  Thank you for logging in as {username}. Have fun sharing
+                  snips!
+                </p>
+              </ShareSnipsBox>
+              {/* Display notifications within the second sidebar */}
+              {notifications.map((notification, index) => (
+                <div key={index}>{notification}</div>
+              ))}
+            </SecondSidebarContent>
+          </Resizable>
         </SecondSidebar>
+
         <SearchContainer>
           <SearchBar type="text" placeholder="Search something..."></SearchBar>
           <SearchButton>Search</SearchButton>
@@ -700,9 +751,11 @@ const InstagramCodeClone: React.FC = () => {
           />
           <PostButton onClick={handlePostSnippet}>Post</PostButton>
         </ShareBox>
+
         <h1>Code Snippets</h1>
         <CodeSnippetsList snippets={[...initialSnippets, ...postedSnippets]} />
       </Container>
+      <MobileNavbar />
     </ThemeProvider>
   );
 };

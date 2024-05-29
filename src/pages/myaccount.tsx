@@ -1,6 +1,12 @@
 import React from "react";
 import styled from "styled-components";
 
+interface MyAccountProps {
+  username: string;
+  email: string;
+  onLogout: () => void;
+}
+
 const MyAccountContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -33,10 +39,7 @@ const Email = styled.p`
   color: #666666;
 `;
 
-const MyAccount: React.FC<{ username: string; email: string }> = ({
-  username,
-  email,
-}) => {
+const MyAccount: React.FC<MyAccountProps> = ({ username, email, onLogout }) => {
   return (
     <MyAccountContainer>
       <Greeting>Hello, {username}</Greeting>
