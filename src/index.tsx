@@ -6,7 +6,7 @@ import Friends from "./pages/friends";
 import { ToDo } from "./pages/todolist";
 import LoginForm from "./pages/signup";
 import App from "./App";
-
+import SearchPage from "./mobile/search";
 import Calendar from "./pages/calendar";
 import reportWebVitals from "./reportWebVitals";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
@@ -23,9 +23,14 @@ function Root() {
       path: "/signup",
       element: <LoginForm setIsLoggedIn={setIsLoggedIn} />, // Pass setIsLoggedIn prop
     },
+
     {
       path: "/friends",
       element: <Friends />,
+    },
+    {
+      path: "/search",
+      element: <SearchPage />,
     },
     {
       path: "/homepage",

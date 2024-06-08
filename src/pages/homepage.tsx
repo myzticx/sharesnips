@@ -1,12 +1,13 @@
 import React, { useState } from "react";
-import { Resizable } from "react-resizable";
 import styled, { createGlobalStyle, ThemeProvider } from "styled-components";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faHeart as farHeart,
   faStar as farStar,
 } from "@fortawesome/free-regular-svg-icons";
-import { v4 as uuidv4 } from "uuid";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { Resizable } from "react-resizable";
 import {
   faHeart,
   faStar,
@@ -22,8 +23,8 @@ import {
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import logo from "../images/logo.png";
-import MobileNavbar from "../components/MobileNavbar";
-import { toast, Toaster } from "react-hot-toast";
+import friends from "./friends";
+import FavoritesPage from "../components/media/favourited"; // Import the FavoritesPage component
 
 // Interface for code snippet
 interface CodeSnippet {
@@ -37,6 +38,7 @@ interface CodeSnippet {
     count: number;
     list: string[];
   };
+  showCommentSection: boolean;
 }
 
 const Footer = styled.footer`
@@ -173,7 +175,10 @@ const Hamburger = styled.div`
   color: ${(props) => props.theme.accent};
 
   @media (max-width: 768px) {
-    display: none;
+    display: block; /* Display the hamburger on screens <= 768px */
+    position: absolute;
+    top: 20px;
+    left: 0px;
   }
 `;
 
@@ -188,7 +193,9 @@ const Sidebar = styled.div<{ isOpen: boolean }>`
   transition: all 0.3s ease;
 
   @media (max-width: 768px) {
-    display: none;
+    width: 100%;
+    display: ${(props) =>
+      props.isOpen ? "block" : "none"}; /* Show or hide on mobile */
   }
 `;
 
@@ -285,6 +292,7 @@ const Logo = styled.div`
 
   @media (max-width: 768px) {
     font-size: 20px;
+    margin-left: 85px;
   }
 `;
 
@@ -336,6 +344,12 @@ const CodeSnippetsList: React.FC<{ snippets: CodeSnippet[] }> = ({
   const [commentInput, setCommentInput] = useState("");
   const [currentTime, setCurrentTime] = useState(new Date());
   const [notifications, setNotifications] = useState<string[]>([]);
+  const [username, setUsername] = useState<string>(""); // Define the state with string type
+
+  const setLoggedInUsername = (name: string) => {
+    // Specify the type for 'name' parameter as string
+    setUsername(name);
+  };
 
   useEffect(() => {
     setSnippetList(snippets);
@@ -346,6 +360,20 @@ const CodeSnippetsList: React.FC<{ snippets: CodeSnippet[] }> = ({
 
     return () => clearInterval(interval);
   }, [snippets]);
+
+  const handleComment = (id: number) => {
+    const updatedSnippets = snippetList.map((snippet) => {
+      if (snippet.id === id) {
+        return {
+          ...snippet,
+          showCommentSection: !snippet.showCommentSection, // Toggle the comment section visibility
+        };
+      }
+      return snippet;
+    });
+
+    setSnippetList(updatedSnippets);
+  };
 
   const getTimeDifference = (timestamp: number): string => {
     const secondsDifference = Math.floor(
@@ -375,8 +403,7 @@ const CodeSnippetsList: React.FC<{ snippets: CodeSnippet[] }> = ({
     const updatedSnippets = snippetList.map((snippet) => {
       if (snippet.id === id) {
         const newNotification = `Your post has received a like!`;
-        setNotifications([newNotification, ...notifications]);
-
+        toast.success(newNotification); // Use toast to display success message
         return {
           ...snippet,
           liked: !snippet.liked,
@@ -389,12 +416,12 @@ const CodeSnippetsList: React.FC<{ snippets: CodeSnippet[] }> = ({
     setSnippetList(updatedSnippets);
   };
 
-  const handleComment = (id: number) => {
+  const handleAddComment = (id: number) => {
     const updatedSnippets = snippetList.map((snippet) => {
-      if (snippet.id === id) {
-        const newComment = ` ${commentInput}`; // Replace with your actual comment logic
+      if (snippet.id === id && commentInput.trim() !== "") {
+        const newComment = `${username}: ${commentInput}`; // Add username to the comment
         const updatedCommentsList = [...snippet.comments.list, newComment];
-
+        toast.success("Comment posted successfully!"); // Use toast to display success message
         return {
           ...snippet,
           comments: {
@@ -402,6 +429,7 @@ const CodeSnippetsList: React.FC<{ snippets: CodeSnippet[] }> = ({
             count: snippet.comments.count + 1,
             list: updatedCommentsList,
           },
+          showCommentSection: false, // Hide the comment section after adding a comment
         };
       }
       return snippet;
@@ -414,6 +442,10 @@ const CodeSnippetsList: React.FC<{ snippets: CodeSnippet[] }> = ({
   const handleFavorite = (id: number) => {
     const updatedSnippets = snippetList.map((snippet) => {
       if (snippet.id === id) {
+        const message = snippet.favorited
+          ? "Removed from favorites"
+          : "Added to favorites";
+        toast.success(message); // Use toast to display success message
         return { ...snippet, favorited: !snippet.favorited };
       }
       return snippet;
@@ -450,15 +482,15 @@ const CodeSnippetsList: React.FC<{ snippets: CodeSnippet[] }> = ({
             {snippet.favorited ? "Favorited" : "Favorite"}
           </FavoriteButton>
           <CommentButton
-            commented={snippet.comments.count > 0}
             onClick={() => handleComment(snippet.id)}
+            commented={snippet.comments.count > 0}
           >
             <FontAwesomeIcon icon={faComment} />
             {snippet.comments.count > 0
               ? `${snippet.comments.count} Comments`
               : "Comment"}
           </CommentButton>
-          {snippet.comments.count > 0 && (
+          {snippet.showCommentSection && (
             <CommentBox>
               {snippet.comments.list.map((comment, index) => (
                 <div key={index}>{comment}</div>
@@ -469,7 +501,7 @@ const CodeSnippetsList: React.FC<{ snippets: CodeSnippet[] }> = ({
                 value={commentInput}
                 onChange={(e) => setCommentInput(e.target.value)}
               />
-              <SendButton onClick={() => handleComment(snippet.id)}>
+              <SendButton onClick={() => handleAddComment(snippet.id)}>
                 Send
               </SendButton>
             </CommentBox>
@@ -564,14 +596,6 @@ const SecondSidebarLink = styled.div`
   }
 `;
 
-const ShareSnipsBox = styled.div`
-  background-color: #333; /* Dark grey background color */
-  color: white; /* Text color */
-  border-radius: 10px; /* Curved edges */
-  padding: 20px; /* Padding inside the box */
-  margin-bottom: 20px; /* Margin to separate from other elements */
-`;
-
 const LogoInLeftBar = styled.img`
   position: absolute;
   top: 20px; // Adjust the top position as needed
@@ -583,6 +607,14 @@ const LogoInLeftBar = styled.img`
   }
 `;
 
+const ShareSnipsBox = styled.div`
+  background-color: #333; /* Dark grey background color */
+  color: white; /* Text color */
+  border-radius: 10px; /* Curved edges */
+  padding: 20px; /* Padding inside the box */
+  margin-bottom: 20px; /* Margin to separate from other elements */
+`;
+
 const InstagramCodeClone: React.FC = () => {
   const [snippetInput, setSnippetInput] = useState("");
   const [postedSnippets, setPostedSnippets] = useState<CodeSnippet[]>([]);
@@ -591,42 +623,28 @@ const InstagramCodeClone: React.FC = () => {
   const [hasNotifications, setHasNotifications] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [notifications, setNotifications] = useState<string[]>([]);
-
-  const checkCodeCharacteristics = (snippet: string) => {
-    // Simple check for code characteristics
-    const codeRegex = /[{}()<>;:,=]/;
-    return codeRegex.test(snippet);
-  };
+  const [favoritedSnippets, setFavoritedSnippets] = useState<CodeSnippet[]>([]); // State for favorited snippets
 
   const handlePostSnippet = () => {
     if (snippetInput.trim() !== "") {
-      // Check if the snippet contains code characteristics
-      if (checkCodeCharacteristics(snippetInput)) {
-        const newSnippet: CodeSnippet = {
-          id: uuidv4(),
-          code: snippetInput.trim(),
-          language: "Any",
-          likes: 0,
-          liked: false,
-          favorited: false,
-          comments: { count: 0, list: [] }, // Initialize comments.list as an empty array
-        };
-        setPostedSnippets([newSnippet, ...postedSnippets]);
-        setSnippetInput("");
-        toast.success("Snippet posted successfully!");
-      } else {
-        // Display error toast if snippet doesn't contain code characteristics
-
-        toast.error("Sorry, but that isn't a code snippet.");
-      }
+      const newSnippet: CodeSnippet = {
+        id: Date.now(),
+        code: snippetInput.trim(),
+        language: "Any",
+        likes: 0,
+        liked: false,
+        favorited: false,
+        comments: { count: 0, list: [] },
+        showCommentSection: false, // Add the showCommentSection property
+      };
+      setPostedSnippets([newSnippet, ...postedSnippets]);
+      setSnippetInput("");
     }
   };
 
   const toggleTheme = () => {
     setCurrentTheme(currentTheme === lightTheme ? darkTheme : lightTheme);
   };
-
-  const [username, setUsername] = useState("");
 
   const toggleNotifications = () => {
     setHasNotifications(!hasNotifications);
@@ -644,6 +662,12 @@ const InstagramCodeClone: React.FC = () => {
   ) => {
     setWidth(size.width);
   };
+  const [username, setUsername] = useState<string>(""); // Define the state with string type
+
+  const setLoggedInUsername = (name: string) => {
+    // Specify the type for 'name' parameter as string
+    setUsername(name);
+  };
 
   const initialSnippets: CodeSnippet[] = [
     // Initial snippets data
@@ -651,6 +675,7 @@ const InstagramCodeClone: React.FC = () => {
 
   const handleProfileClick = () => {
     if (isLoggedIn) {
+      setLoggedInUsername("User123"); // Set the username here
       // Redirect to myaccount.tsx if logged in
       return <Link to="/myaccount">My Account</Link>;
     } else {
@@ -670,7 +695,7 @@ const InstagramCodeClone: React.FC = () => {
           <Logo>ShareSnips</Logo>
           <ToggleButton onClick={toggleTheme}>Toggle Theme</ToggleButton>
         </Header>
-
+        <ToastContainer />
         <Sidebar isOpen={isSidebarOpen}>
           <SidebarContent>
             <BackIcon onClick={toggleSidebar}>
@@ -699,12 +724,6 @@ const InstagramCodeClone: React.FC = () => {
               <FontAwesomeIcon icon={faUsers} />
               <Link to="/calendar">
                 <IconText>Calendar</IconText>
-              </Link>
-            </SidebarLink>
-            <SidebarLink>
-              <FontAwesomeIcon icon={faStar} />
-              <Link to="/calendar">
-                <IconText>Favourites</IconText>
               </Link>
             </SidebarLink>
           </SidebarContent>
@@ -737,7 +756,6 @@ const InstagramCodeClone: React.FC = () => {
             </SecondSidebarContent>
           </Resizable>
         </SecondSidebar>
-
         <SearchContainer>
           <SearchBar type="text" placeholder="Search something..."></SearchBar>
           <SearchButton>Search</SearchButton>
@@ -751,11 +769,9 @@ const InstagramCodeClone: React.FC = () => {
           />
           <PostButton onClick={handlePostSnippet}>Post</PostButton>
         </ShareBox>
-
         <h1>Code Snippets</h1>
         <CodeSnippetsList snippets={[...initialSnippets, ...postedSnippets]} />
       </Container>
-      <MobileNavbar />
     </ThemeProvider>
   );
 };

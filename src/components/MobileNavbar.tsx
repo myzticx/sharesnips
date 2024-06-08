@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "styled-components";
+import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faHouse,
@@ -22,12 +23,13 @@ const MobileNavContainer = styled.div`
     padding: 10px 0;
     position: fixed;
     bottom: 0;
+    height: 6%;
   }
 `;
 
 const NavButton = styled.div`
   color: white;
-  font-size: 24px;
+  font-size: 30px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -42,7 +44,9 @@ const MobileNavbar = () => {
         <FontAwesomeIcon icon={faHouse} />
       </NavButton>
       <NavButton>
-        <FontAwesomeIcon icon={faMagnifyingGlass} />
+        <Link to="/search">
+          <FontAwesomeIcon icon={faMagnifyingGlass} />
+        </Link>
       </NavButton>
       <NavButton>
         <FontAwesomeIcon icon={faUsers} />

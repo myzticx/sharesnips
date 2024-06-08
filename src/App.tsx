@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import styled from "styled-components";
 import { Routes, Route, Navigate } from "react-router-dom";
 import LandingPage from "./pages/landingpage";
 import Friends from "./pages/friends";
@@ -7,10 +8,30 @@ import MyAccount from "./pages/myaccount";
 import { ToDo } from "./pages/todolist";
 import Calendar from "./pages/calendar";
 import LoginForm from "./pages/signup";
-
+import SearchPage from "./mobile/search";
 import HomePage from "./pages/homepage";
 import SignUpForm from "./pages/signuppage";
 import toast, { Toaster } from "react-hot-toast";
+import MainNavbar from "./components/MainNavbar";
+import MobileNavbar from "./components/MobileNavbar";
+
+const NavbarContainer = styled.div`
+  @media (min-width: 1024px) {
+    display: block;
+  }
+  @media (max-width: 1023px) {
+    display: none;
+  }
+`;
+
+const MobileNavbarContainer = styled.div`
+  @media (min-width: 1024px) {
+    display: none;
+  }
+  @media (max-width: 1023px) {
+    display: block;
+  }
+`;
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -42,7 +63,12 @@ function App() {
           duration: 2000,
         }}
       />
-
+      <NavbarContainer>
+        <MainNavbar />
+      </NavbarContainer>
+      <MobileNavbarContainer>
+        <MobileNavbar />
+      </MobileNavbarContainer>
       <Routes>
         <Route
           path="/"
@@ -71,6 +97,16 @@ function App() {
           path="/todolist"
           element={
             isLoggedIn ? <ToDo /> : <Navigate to="/signup" replace={true} />
+          }
+        />
+        <Route
+          path="/search"
+          element={
+            isLoggedIn ? (
+              <SearchPage />
+            ) : (
+              <Navigate to="/signup" replace={true} />
+            )
           }
         />
         <Route
