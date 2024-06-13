@@ -1,17 +1,17 @@
+import React from "react";
 import styled from "styled-components";
 import MainNavbar from "../components/MainNavbar";
+import MobileNavbar from "../components/MobileNavbar";
+import searchimage from "../images/searchimg.png";
 
 // Container for the entire search page
 const SearchPageContainer = styled.div`
   height: 100vh; /* Full height */
   display: flex;
+  flex-direction: column; /* Make the content stack vertically */
   align-items: center;
-  justify-content: center;
-  background: linear-gradient(
-    135deg,
-    #000000 0%,
-    #e1306c 100%
-  ); /* Gradient background */
+  justify-content: top;
+  background-color: #000000;
 `;
 
 // Container for the search bar
@@ -25,7 +25,7 @@ const SearchContainer = styled.div`
 // Styling for the search input
 const SearchBar = styled.input`
   flex: 1; /* Take remaining space */
-  padding: 12px 16px; /* Adjust the padding for height and width */
+  padding: 12px 90px; /* Adjust the padding for height and width */
   border-radius: 20px; /* Curved edges */
   border: 1px solid #ccc; /* Add a border for visibility */
   color: #000000; /* Text color */
@@ -47,14 +47,24 @@ const SearchButton = styled.button`
   }
 `;
 
+// Styled component for the image
+const StyledImage = styled.img`
+  margin-top: 10px;
+  height: 170px; /* Adjust height as needed */
+  width: auto; /* Keep aspect ratio */
+  margin-bottom: 20px; /* Space below the image */
+`;
+
 // The search page component
 const SearchPage = () => {
   return (
     <SearchPageContainer>
+      <StyledImage src={searchimage} alt="Search" />
       <SearchContainer>
-        <SearchBar type="text" placeholder="Search..." />
+        <SearchBar type="text" placeholder="Search for code snippets..." />
         <SearchButton>Search</SearchButton>
       </SearchContainer>
+      <MobileNavbar />
     </SearchPageContainer>
   );
 };

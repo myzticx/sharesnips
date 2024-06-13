@@ -20,11 +20,12 @@ import {
   faHouse,
   faBell,
 } from "@fortawesome/free-solid-svg-icons";
+import MobileNavbar from "../components/MobileNavbar";
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import logo from "../images/logo.png";
 import friends from "./friends";
-import FavoritesPage from "../components/media/favourited"; // Import the FavoritesPage component
+import FavoritesPage from "../components/media/favourited";
 
 // Interface for code snippet
 interface CodeSnippet {
@@ -772,6 +773,7 @@ const InstagramCodeClone: React.FC = () => {
         <h1>Code Snippets</h1>
         <CodeSnippetsList snippets={[...initialSnippets, ...postedSnippets]} />
       </Container>
+      <MobileNavbar />
     </ThemeProvider>
   );
 };

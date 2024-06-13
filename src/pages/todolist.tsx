@@ -223,13 +223,12 @@ const ToDoList: React.FC = () => {
     setShowTick(true);
     setTimeout(() => {
       setShowTick(false);
-    }, 5000);
+      // Remove the completed task after the notification expires
+      setTodoList((prevList) =>
+        prevList.filter((_, i) => i !== confirmingIndex)
+      );
+    }, 5000); // Match this timeout duration to the fade-out duration
   };
-
-  // Remove completed tasks
-  useEffect(() => {
-    setTodoList(todoList.filter((task) => !task.completed));
-  }, [todoList]);
 
   return (
     <AppWrapper>

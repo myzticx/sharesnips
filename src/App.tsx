@@ -45,10 +45,6 @@ function App() {
     }
   }, []);
 
-  // const [favoritedIds, setFavoritedIds] = useState<number[]>([]);
-
-  // return <Favourites favoritedIds={favoritedIds} />;
-
   const handleLogout = () => {
     setIsLoggedIn(false);
     localStorage.removeItem("isLoggedIn");
@@ -76,7 +72,6 @@ function App() {
             isLoggedIn ? <HomePage /> : <Navigate to="/signup" replace={true} />
           }
         />
-
         <Route
           path="/signup"
           element={<LoginForm setIsLoggedIn={setIsLoggedIn} />}
