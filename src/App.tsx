@@ -14,6 +14,10 @@ import SignUpForm from "./pages/signuppage";
 import toast, { Toaster } from "react-hot-toast";
 import MainNavbar from "./components/MainNavbar";
 import MobileNavbar from "./components/MobileNavbar";
+import { useLocation } from "react-router-dom";
+import { useFetch } from "./hooks/useFetch";
+import { ApiResponse } from "./types/api";
+const API_URL = "https://0a71-77-102-79-98.ngrok-free.app/";
 
 const NavbarContainer = styled.div`
   @media (min-width: 1024px) {
@@ -35,6 +39,8 @@ const MobileNavbarContainer = styled.div`
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const location = useLocation();
+  const { data, loading, error } = useFetch<ApiResponse>(API_URL);
 
   useEffect(() => {
     const rememberMe = localStorage.getItem("rememberMe");
@@ -51,6 +57,19 @@ function App() {
     localStorage.removeItem("rememberMe");
   };
 
+  // Display backend data (for demonstration)
+  useEffect(() => {
+    if (data) {
+      console.log("Backend data:", data);
+      // You can use this data anywhere in your app
+      // For example: toast.success(data.message);
+    }
+    if (error) {
+      console.error("Backend error:", error);
+      toast.error("Failed to connect to backend");
+    }
+  }, [data, error]);
+
   return (
     <div className="App">
       <Toaster
@@ -59,19 +78,33 @@ function App() {
           duration: 2000,
         }}
       />
-      <NavbarContainer>
-        <MainNavbar />
-      </NavbarContainer>
-      <MobileNavbarContainer>
-        <MobileNavbar />
-      </MobileNavbarContainer>
+
+      {location.pathname !== "/" && (
+        <>
+          <NavbarContainer>
+            <MainNavbar />
+          </NavbarContainer>
+          <MobileNavbarContainer>
+            <MobileNavbar />
+          </MobileNavbarContainer>
+        </>
+      )}
+
+      {/* Optional: Display backend message (example) */}
+      {data?.message && (
+        <div
+          style={{
+            textAlign: "center",
+            padding: "10px",
+            background: "#f0f0f0",
+          }}
+        >
+          Backend Status: {data.message}
+        </div>
+      )}
+
       <Routes>
-        <Route
-          path="/"
-          element={
-            isLoggedIn ? <HomePage /> : <Navigate to="/signup" replace={true} />
-          }
-        />
+        <Route path="/" element={<LandingPage />} />
         <Route
           path="/signup"
           element={<LoginForm setIsLoggedIn={setIsLoggedIn} />}
@@ -79,7 +112,11 @@ function App() {
         <Route
           path="/homepage"
           element={
-            isLoggedIn ? <HomePage /> : <Navigate to="/signup" replace={true} />
+            isLoggedIn ? (
+              <HomePage backendData={data} />
+            ) : (
+              <Navigate to="/signup" replace={true} />
+            )
           }
         />
         <Route

@@ -5,6 +5,7 @@ import {
   faHeart as farHeart,
   faStar as farStar,
 } from "@fortawesome/free-regular-svg-icons";
+
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Resizable } from "react-resizable";
@@ -19,6 +20,7 @@ import {
   faComment,
   faHouse,
   faBell,
+  faFilter,
 } from "@fortawesome/free-solid-svg-icons";
 import MobileNavbar from "../components/MobileNavbar";
 import { useEffect, useRef } from "react";
@@ -26,12 +28,76 @@ import { Link } from "react-router-dom";
 import logo from "../images/logo.png";
 import friends from "./friends";
 import FavoritesPage from "../components/media/favourited";
+import MainNavbar from "../components/MainNavbar";
+import { ApiResponse } from "../types/api";
 
-// Interface for code snippet
+type HomePageProps = {
+  backendData?: ApiResponse | null; // Make it optional if not always required
+};
+
+function generateGUID() {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0,
+      v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+console.log(generateGUID());
+
+type Language = "html" | "css" | "javascript" | "typescript" | "tsx" | "text";
+
+// Update the detectLanguage function to return the Language type
+export const detectLanguage = (code: string): Language => {
+  const trimmedCode = code.trim().replace(/\r\n/g, "\n");
+
+  // HTML detection
+  if (/<[a-z][\s\S]*>/i.test(trimmedCode)) {
+    if (
+      /<!DOCTYPE html>|<\/?(html|head|body|div|p|span)[\s>]/i.test(trimmedCode)
+    ) {
+      return "html";
+    }
+    if (/<\/?[A-Z][a-zA-Z]*[\s>]|{[^}]*}/.test(trimmedCode)) {
+      return "tsx";
+    }
+    return "html";
+  }
+
+  // CSS detection
+  if (
+    /^[^{]*\{[^}]*\}/.test(trimmedCode) &&
+    /(color|margin|padding|font|width|height):[^;]*;/.test(trimmedCode)
+  ) {
+    return "css";
+  }
+
+  // JavaScript/TypeScript detection
+  if (
+    /(^|\s)(function|const|let|var|interface|type)\s/.test(trimmedCode) ||
+    /=>|import\s|export\s/.test(trimmedCode)
+  ) {
+    if (/<\/?[A-Z][a-zA-Z]*>|React\./.test(trimmedCode)) {
+      return "tsx";
+    }
+    if (
+      /:\s*(string|number|boolean|any)\s*[;=]|interface\s|type\s/.test(
+        trimmedCode
+      )
+    ) {
+      return "typescript";
+    }
+    return "javascript";
+  }
+
+  // Default to text if no matches
+  return "text";
+};
+
 interface CodeSnippet {
-  id: number;
+  id: string;
   code: string;
-  language: string;
+  language: Language; // Now using our defined type
   likes: number;
   liked: boolean;
   favorited: boolean;
@@ -40,6 +106,7 @@ interface CodeSnippet {
     list: string[];
   };
   showCommentSection: boolean;
+  timestamp: number; // Added timestamp for sorting/filtering
 }
 
 const Footer = styled.footer`
@@ -159,15 +226,24 @@ const Container = styled.div`
   color: ${(props) => props.theme.text};
 `;
 
+const SnippetId = styled.div`
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 12px;
+  color: ${(props) => props.theme.text};
+  opacity: 0.7;
+`;
+
 const CodeSnippetCard = styled.div`
-  background-color: ${(props) =>
-    props.theme.cardBackground}; /* Set the background color for each post */
+  background-color: ${(props) => props.theme.cardBackground};
   color: ${(props) => props.theme.text};
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 20px;
   margin-bottom: 20px;
   border: 1px solid ${(props) => props.theme.borderColor};
+  position: relative; // Add this to make absolute positioning work for child elements
 `;
 
 const Hamburger = styled.div`
@@ -176,7 +252,7 @@ const Hamburger = styled.div`
   color: ${(props) => props.theme.accent};
 
   @media (max-width: 768px) {
-    display: block; /* Display the hamburger on screens <= 768px */
+    display: none; /* Display the hamburger on screens <= 768px */
     position: absolute;
     top: 20px;
     left: 0px;
@@ -275,6 +351,15 @@ const PostButton = styled.button`
   cursor: pointer;
 `;
 
+const PreviewContainer = styled.div`
+  border: 1px solid ${(props) => props.theme.borderColor};
+  border-radius: 8px;
+  padding: 15px;
+  margin: 10px 0;
+  background-color: white;
+  color: black;
+`;
+
 const Header = styled.header`
   display: flex;
   justify-content: space-between;
@@ -293,7 +378,7 @@ const Logo = styled.div`
 
   @media (max-width: 768px) {
     font-size: 20px;
-    margin-left: 85px;
+    margin-left: 5px;
   }
 `;
 
@@ -312,6 +397,11 @@ const CommentInput = styled.input`
   border: 1px solid #ccc; /* Example border color */
   margin-bottom: 10px;
   outline: none; /* Remove outline on focus */
+`;
+
+const LanguageButton = styled.button`
+  border-radius: 5px;
+  color: white;
 `;
 
 const SendButton = styled.button`
@@ -335,6 +425,56 @@ const CommentBox = styled.div`
   margin-top: 10px;
 `;
 
+const LanguageTag = styled.span<{ language: Language }>`
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  margin-left: 10px;
+  background-color: ${(props) => {
+    switch (props.language) {
+      case "html":
+        return "#e34c26";
+      case "css":
+        return "#264de4";
+      case "javascript":
+        return "#f0db4f";
+      case "typescript":
+        return "#007acc";
+      case "tsx":
+        return "#61dafb";
+      default:
+        return "#666";
+    }
+  }};
+  color: ${(props) => (props.language === "javascript" ? "black" : "white")};
+`;
+
+const FilterButton = styled.button<{ active: boolean }>`
+  margin: 5px;
+  padding: 5px 10px;
+  border-radius: 15px;
+  border: 1px solid ${(props) => props.theme.accent};
+  background-color: ${(props) =>
+    props.active ? props.theme.accent : "transparent"};
+  color: ${(props) =>
+    props.active ? props.theme.background : props.theme.text};
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: ${(props) => props.theme.accent};
+    color: ${(props) => props.theme.background};
+  }
+`;
+
+const FilterContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  justify-content: center;
+`;
+
 const getHeartIcon = (liked: boolean) => (liked ? faHeart : farHeart);
 const getStarIcon = (favorited: boolean) => (favorited ? faStar : farStar);
 
@@ -345,16 +485,15 @@ const CodeSnippetsList: React.FC<{ snippets: CodeSnippet[] }> = ({
   const [commentInput, setCommentInput] = useState("");
   const [currentTime, setCurrentTime] = useState(new Date());
   const [notifications, setNotifications] = useState<string[]>([]);
-  const [username, setUsername] = useState<string>(""); // Define the state with string type
+  const [username, setUsername] = useState<string>("");
+  const [filter, setFilter] = useState<Language | "all">("all");
 
   const setLoggedInUsername = (name: string) => {
-    // Specify the type for 'name' parameter as string
     setUsername(name);
   };
 
   useEffect(() => {
     setSnippetList(snippets);
-    // Update the current time every second
     const interval = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
@@ -362,17 +501,28 @@ const CodeSnippetsList: React.FC<{ snippets: CodeSnippet[] }> = ({
     return () => clearInterval(interval);
   }, [snippets]);
 
-  const handleComment = (id: number) => {
+  const canPreview = (code: string, language: Language) => {
+    return language === "html" && /<[a-z][\s\S]*>/i.test(code);
+  };
+
+  const renderPreview = (code: string) => {
+    return (
+      <PreviewContainer>
+        <div dangerouslySetInnerHTML={{ __html: code }} />
+      </PreviewContainer>
+    );
+  };
+
+  const handleComment = (id: string) => {
     const updatedSnippets = snippetList.map((snippet) => {
       if (snippet.id === id) {
         return {
           ...snippet,
-          showCommentSection: !snippet.showCommentSection, // Toggle the comment section visibility
+          showCommentSection: !snippet.showCommentSection,
         };
       }
       return snippet;
     });
-
     setSnippetList(updatedSnippets);
   };
 
@@ -400,11 +550,11 @@ const CodeSnippetsList: React.FC<{ snippets: CodeSnippet[] }> = ({
     }
   };
 
-  const handleLike = (id: number) => {
+  const handleLike = (id: string) => {
     const updatedSnippets = snippetList.map((snippet) => {
       if (snippet.id === id) {
         const newNotification = `Your post has received a like!`;
-        toast.success(newNotification); // Use toast to display success message
+        toast.success(newNotification);
         return {
           ...snippet,
           liked: !snippet.liked,
@@ -413,16 +563,15 @@ const CodeSnippetsList: React.FC<{ snippets: CodeSnippet[] }> = ({
       }
       return snippet;
     });
-
     setSnippetList(updatedSnippets);
   };
 
-  const handleAddComment = (id: number) => {
+  const handleAddComment = (id: string) => {
     const updatedSnippets = snippetList.map((snippet) => {
       if (snippet.id === id && commentInput.trim() !== "") {
-        const newComment = `${username}: ${commentInput}`; // Add username to the comment
+        const newComment = `${username}: ${commentInput}`;
         const updatedCommentsList = [...snippet.comments.list, newComment];
-        toast.success("Comment posted successfully!"); // Use toast to display success message
+        toast.success("Comment posted successfully!");
         return {
           ...snippet,
           comments: {
@@ -430,37 +579,95 @@ const CodeSnippetsList: React.FC<{ snippets: CodeSnippet[] }> = ({
             count: snippet.comments.count + 1,
             list: updatedCommentsList,
           },
-          showCommentSection: false, // Hide the comment section after adding a comment
+          showCommentSection: true,
         };
       }
       return snippet;
     });
-
     setSnippetList(updatedSnippets);
-    setCommentInput(""); // Clear the comment input after submitting
+    setCommentInput("");
   };
 
-  const handleFavorite = (id: number) => {
+  const handleFavorite = (id: string) => {
     const updatedSnippets = snippetList.map((snippet) => {
       if (snippet.id === id) {
         const message = snippet.favorited
           ? "Removed from favorites"
           : "Added to favorites";
-        toast.success(message); // Use toast to display success message
+        toast.success(message);
         return { ...snippet, favorited: !snippet.favorited };
       }
       return snippet;
     });
-
     setSnippetList(updatedSnippets);
   };
 
+  const filteredSnippets =
+    filter === "all"
+      ? snippetList
+      : snippetList.filter((snippet) => snippet.language === filter);
+
   return (
     <div>
-      {snippetList.map((snippet) => (
+      <FilterContainer>
+        <FilterButton
+          active={filter === "all"}
+          onClick={() => setFilter("all")}
+        >
+          All Languages
+        </FilterButton>
+        <FilterButton
+          active={filter === "html"}
+          onClick={() => setFilter("html")}
+        >
+          HTML
+        </FilterButton>
+        <FilterButton
+          active={filter === "css"}
+          onClick={() => setFilter("css")}
+        >
+          CSS
+        </FilterButton>
+        <FilterButton
+          active={filter === "javascript"}
+          onClick={() => setFilter("javascript")}
+        >
+          JavaScript
+        </FilterButton>
+        <FilterButton
+          active={filter === "typescript"}
+          onClick={() => setFilter("typescript")}
+        >
+          TypeScript
+        </FilterButton>
+        <FilterButton
+          active={filter === "tsx"}
+          onClick={() => setFilter("tsx")}
+        >
+          TSX
+        </FilterButton>
+        <FilterButton
+          active={filter === "text"}
+          onClick={() => setFilter("text")}
+        >
+          Text
+        </FilterButton>
+      </FilterContainer>
+
+      {filteredSnippets.map((snippet) => (
         <CodeSnippetCard key={snippet.id}>
+          <SnippetId>ID: {snippet.id}</SnippetId>
+          {canPreview(snippet.code, snippet.language) && (
+            <>
+              <h4>Preview:</h4>
+              {renderPreview(snippet.code)}
+            </>
+          )}
           <div>
             <PreCode>{snippet.code}</PreCode>
+            <LanguageTag language={snippet.language}>
+              {snippet.language.toUpperCase()}
+            </LanguageTag>
           </div>
           <LikeButton
             liked={snippet.liked}
@@ -616,27 +823,30 @@ const ShareSnipsBox = styled.div`
   margin-bottom: 20px; /* Margin to separate from other elements */
 `;
 
-const InstagramCodeClone: React.FC = () => {
+export default function HomePage({ backendData }: HomePageProps) {
   const [snippetInput, setSnippetInput] = useState("");
   const [postedSnippets, setPostedSnippets] = useState<CodeSnippet[]>([]);
-  const [currentTheme, setCurrentTheme] = useState(darkTheme); // Set dark theme as the initial theme
+  const [currentTheme, setCurrentTheme] = useState(darkTheme);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [hasNotifications, setHasNotifications] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [notifications, setNotifications] = useState<string[]>([]);
-  const [favoritedSnippets, setFavoritedSnippets] = useState<CodeSnippet[]>([]); // State for favorited snippets
+  const [favoritedSnippets, setFavoritedSnippets] = useState<CodeSnippet[]>([]);
+  const [username, setUsername] = useState<string>("");
 
   const handlePostSnippet = () => {
     if (snippetInput.trim() !== "") {
+      const detectedLanguage = detectLanguage(snippetInput);
       const newSnippet: CodeSnippet = {
-        id: Date.now(),
+        id: generateGUID(),
         code: snippetInput.trim(),
-        language: "Any",
+        language: detectedLanguage,
         likes: 0,
         liked: false,
         favorited: false,
         comments: { count: 0, list: [] },
-        showCommentSection: false, // Add the showCommentSection property
+        showCommentSection: false,
+        timestamp: Date.now(),
       };
       setPostedSnippets([newSnippet, ...postedSnippets]);
       setSnippetInput("");
@@ -663,10 +873,8 @@ const InstagramCodeClone: React.FC = () => {
   ) => {
     setWidth(size.width);
   };
-  const [username, setUsername] = useState<string>(""); // Define the state with string type
 
   const setLoggedInUsername = (name: string) => {
-    // Specify the type for 'name' parameter as string
     setUsername(name);
   };
 
@@ -676,11 +884,9 @@ const InstagramCodeClone: React.FC = () => {
 
   const handleProfileClick = () => {
     if (isLoggedIn) {
-      setLoggedInUsername("User123"); // Set the username here
-      // Redirect to myaccount.tsx if logged in
+      setLoggedInUsername("User123");
       return <Link to="/myaccount">My Account</Link>;
     } else {
-      // Redirect to notsignedin.tsx if not logged in
       return <Link to="/notsignedin">Not Signed In</Link>;
     }
   };
@@ -734,8 +940,8 @@ const InstagramCodeClone: React.FC = () => {
           <Resizable
             width={width}
             height={Infinity}
-            minConstraints={[200, Infinity]} // Minimum width
-            maxConstraints={[600, Infinity]} // Maximum width
+            minConstraints={[200, Infinity]}
+            maxConstraints={[600, Infinity]}
             onResize={handleResize}
           >
             <SecondSidebarContent style={{ width: `${width}px` }}>
@@ -750,7 +956,6 @@ const InstagramCodeClone: React.FC = () => {
                   snips!
                 </p>
               </ShareSnipsBox>
-              {/* Display notifications within the second sidebar */}
               {notifications.map((notification, index) => (
                 <div key={index}>{notification}</div>
               ))}
@@ -768,14 +973,18 @@ const InstagramCodeClone: React.FC = () => {
             value={snippetInput}
             onChange={(e) => setSnippetInput(e.target.value)}
           />
+          {snippetInput && (
+            <div style={{ margin: "10px 0", color: currentTheme.accent }}>
+              Detected language: {detectLanguage(snippetInput)}
+            </div>
+          )}
           <PostButton onClick={handlePostSnippet}>Post</PostButton>
         </ShareBox>
         <h1>Code Snippets</h1>
         <CodeSnippetsList snippets={[...initialSnippets, ...postedSnippets]} />
       </Container>
+      {backendData?.message && <p>Backend says: {backendData.message}</p>}
       <MobileNavbar />
     </ThemeProvider>
   );
-};
-
-export default InstagramCodeClone;
+}
