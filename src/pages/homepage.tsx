@@ -195,17 +195,18 @@ const lightTheme = {
 };
 
 const darkTheme = {
-  background: "#000000",
+  background: "linear-gradient(to bottom right, #000000, #1d4ed8)",
   text: "#FFFFFF",
-  accent: "#E1306C",
-  cardBackground: "#2C2A2A",
+  accent: "white",
+  cardBackground: "rgba(255, 255, 255, 0.1)",
   borderColor: "#FFFFFF",
 };
 
 // Global styles
 const GlobalStyles = createGlobalStyle`
   body {
-    background-color: ${(props) => props.theme.background};
+    background: ${(props) =>
+      props.theme.background}; /* Changed from background-color */
     color: ${(props) => props.theme.text};
     transition: all 0.3s ease;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -213,12 +214,13 @@ const GlobalStyles = createGlobalStyle`
       sans-serif;
     margin: 0;
     padding: 0;
+    min-height: 100vh; /* Add this to ensure full height */
   }
-  `;
+`;
 
 // Styled components for your elements
 const Container = styled.div`
-  max-width: 800px;
+  max-width: 830px;
   margin: 0 auto;
   padding: 20px;
   background-color: ${(props) =>
@@ -261,13 +263,14 @@ const Hamburger = styled.div`
 
 const Sidebar = styled.div<{ isOpen: boolean }>`
   position: fixed;
-  top: 0;
-  left: ${(props) => (props.isOpen ? "0" : "-100%")};
-  width: 250px;
-  height: 100%;
-  background-color: ${(props) => props.theme.background};
-  border-right: 1px solid ${(props) => props.theme.borderColor};
+  top: 17px;
+  left: 130px;
+  width: 350px;
+  height: 95%;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-right: 1px solid #ffffff;
   transition: all 0.3s ease;
+  border-radius: 30px;
 
   @media (max-width: 768px) {
     width: 100%;
@@ -344,7 +347,7 @@ const Input = styled.input`
 
 const PostButton = styled.button`
   background-color: ${(props) => props.theme.accent};
-  color: ${(props) => props.theme.text};
+  color: black;
   border: none;
   padding: 8px 16px;
   border-radius: 4px;
@@ -766,13 +769,14 @@ const SearchButton = styled.button`
 
 const SecondSidebar = styled.div`
   position: fixed;
-  top: 0;
-  right: 0;
-  width: 300px;
-  height: 100%;
-  background-color: ${(props) =>
-    props.theme.background}; /* Set second sidebar background */
-  border-left: 1px solid ${(props) => props.theme.borderColor};
+  top: 17px;
+  right: 130px;
+  width: 350px;
+  height: 95%;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-left: 1px solid #ffffff;
+  border-radius: 30px;
+
   @media (max-width: 768px) {
     display: none;
   }
@@ -801,6 +805,90 @@ const SecondSidebarLink = styled.div`
 
   &:hover {
     color: ${(props) => props.theme.accent};
+  }
+`;
+
+const NavWrapper = styled.div`
+  padding-top: 1.5rem;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+`;
+
+const Nav = styled.nav`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(12px);
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  max-width: 42%;
+  margin: 0 auto;
+`;
+
+const LogoSection = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+`;
+
+const LogoIcon = styled.div`
+  width: 2rem;
+  height: 2rem;
+  background: linear-gradient(to bottom right, #3b82f6, #7c3aed);
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const LogoIconInner = styled.div`
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid white;
+  border-radius: 0.25rem;
+  transform: rotate(45deg);
+`;
+
+const LogoText = styled.span`
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: white;
+`;
+
+const NavMenu = styled.div`
+  display: none;
+  align-items: center;
+  gap: 2rem;
+
+  @media (min-width: 768px) {
+    display: flex;
+  }
+`;
+
+const NavLink = styled.a`
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  transition: color 0.3s ease;
+
+  &:hover {
+    color: white;
+  }
+`;
+
+const NavButton = styled.button`
+  background: #2563eb;
+  color: white;
+  padding: 0.5rem 1.5rem;
+  border-radius: 9999px;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background: #1d4ed8;
   }
 `;
 
@@ -894,15 +982,29 @@ export default function HomePage({ backendData }: HomePageProps) {
   return (
     <ThemeProvider theme={currentTheme}>
       <GlobalStyles />
+
+      <NavWrapper>
+        <Nav>
+          <LogoSection>
+            <LogoIcon>
+              <LogoIconInner />
+            </LogoIcon>
+            <LogoText>ShareSnips</LogoText>
+          </LogoSection>
+
+          <NavMenu>
+            <NavLink href="#">About</NavLink>
+            <NavLink href="#">Services</NavLink>
+            <NavLink href="#">Purchase Plans</NavLink>
+            <NavLink href="#">Creator</NavLink>
+            <NavLink href="#">Resources</NavLink>
+            <NavButton>Contact Us</NavButton>
+          </NavMenu>
+        </Nav>
+      </NavWrapper>
+      <SecondSidebar>Hi</SecondSidebar>
+      <ToastContainer />
       <Container>
-        <Header>
-          <Hamburger onClick={toggleSidebar}>
-            <FontAwesomeIcon icon={faBars} />
-          </Hamburger>
-          <Logo>ShareSnips</Logo>
-          <ToggleButton onClick={toggleTheme}>Toggle Theme</ToggleButton>
-        </Header>
-        <ToastContainer />
         <Sidebar isOpen={isSidebarOpen}>
           <SidebarContent>
             <BackIcon onClick={toggleSidebar}>
@@ -936,32 +1038,6 @@ export default function HomePage({ backendData }: HomePageProps) {
           </SidebarContent>
         </Sidebar>
 
-        <SecondSidebar>
-          <Resizable
-            width={width}
-            height={Infinity}
-            minConstraints={[200, Infinity]}
-            maxConstraints={[600, Infinity]}
-            onResize={handleResize}
-          >
-            <SecondSidebarContent style={{ width: `${width}px` }}>
-              <SecondSidebarLink>
-                <FontAwesomeIcon icon={faUsers} />
-                <IconText>Feed</IconText>
-              </SecondSidebarLink>
-              <ShareSnipsBox>
-                <h3>ShareSnips</h3>
-                <p>
-                  Thank you for logging in as {username}. Have fun sharing
-                  snips!
-                </p>
-              </ShareSnipsBox>
-              {notifications.map((notification, index) => (
-                <div key={index}>{notification}</div>
-              ))}
-            </SecondSidebarContent>
-          </Resizable>
-        </SecondSidebar>
         <SearchContainer>
           <SearchBar type="text" placeholder="Search something..."></SearchBar>
           <SearchButton>Search</SearchButton>

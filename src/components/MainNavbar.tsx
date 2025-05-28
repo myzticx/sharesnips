@@ -81,13 +81,14 @@ const Hamburger = styled.div`
 
 const Sidebar = styled.div<{ isOpen: boolean }>`
   position: fixed;
-  top: 0;
-  left: ${(props) => (props.isOpen ? "0" : "-100%")};
-  width: 250px;
-  height: 100%;
-  background-color: ${(props) => props.theme.background};
-  border-right: 1px solid ${(props) => props.theme.borderColor};
+  top: 17px;
+  left: 130px;
+  width: 350px;
+  height: 95%;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-right: 1px solid #ffffff;
   transition: all 0.3s ease;
+  border-radius: 5%;
 
   @media (max-width: 768px) {
     width: 100%;
@@ -198,13 +199,14 @@ const SecondSidebarLink = styled.div`
 
 const SecondSidebar = styled.div`
   position: fixed;
-  top: 0;
-  right: 0;
-  width: 300px;
-  height: 100%;
-  background-color: ${(props) =>
-    props.theme.background}; /* Set second sidebar background */
-  border-left: 1px solid ${(props) => props.theme.borderColor};
+  top: 17px;
+  right: 130px;
+  width: 350px;
+  height: 95%;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-left: 1px solid #ffffff;
+  border-radius: 30px;
+
   @media (max-width: 768px) {
     display: none;
   }
