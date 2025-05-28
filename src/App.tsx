@@ -17,6 +17,7 @@ import MobileNavbar from "./components/MobileNavbar";
 import { useLocation } from "react-router-dom";
 import { useFetch } from "./hooks/useFetch";
 import { ApiResponse } from "./types/api";
+import PremiumBusinessCard from "./pages/businesscards";
 const API_URL = "https://0a71-77-102-79-98.ngrok-free.app/";
 
 const NavbarContainer = styled.div`
@@ -109,6 +110,7 @@ function App() {
           path="/signup"
           element={<LoginForm setIsLoggedIn={setIsLoggedIn} />}
         />
+
         <Route
           path="/homepage"
           element={
@@ -145,6 +147,16 @@ function App() {
           path="/calendar"
           element={
             isLoggedIn ? <Calendar /> : <Navigate to="/signup" replace={true} />
+          }
+        />
+        <Route
+          path="/businesscards"
+          element={
+            isLoggedIn ? (
+              <PremiumBusinessCard />
+            ) : (
+              <Navigate to="/signup" replace={true} />
+            )
           }
         />
         <Route

@@ -8,6 +8,7 @@ import LoginForm from "./pages/signup";
 import App from "./App";
 import SearchPage from "./mobile/search";
 import Calendar from "./pages/calendar";
+import PremiumBusinessCard from "./pages/businesscards";
 import reportWebVitals from "./reportWebVitals";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
@@ -23,7 +24,10 @@ function Root() {
       path: "/signup",
       element: <LoginForm setIsLoggedIn={setIsLoggedIn} />, // Pass setIsLoggedIn prop
     },
-
+    {
+      path: "/businesscards",
+      element: <PremiumBusinessCard />,
+    },
     {
       path: "/friends",
       element: <Friends />,
